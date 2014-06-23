@@ -1,0 +1,27 @@
+IpLogger Package
+Mike Edulla
+medulla@infosoc.com
+============================
+
+These two programs let you log tcp and icmp connections in syslog, along
+with the hostname. They are just something I whipped up quickly, and could
+be improved alot - especially the icmp logging program.
+
+
+tcplog
+   This program logs all tcp connections to your host. It also makes a
+attempt at detecting the ftpbounce attack described by hobbit at avian.org
+(read ftpbounce.txt included in this archive for a description of the
+attack). The way we detect it is if a privledged (0-1023) connect comes on
+source port 20, we log it as a ftp bounce attack. Connections on source port
+20 to non privledged ports are not logged at all - we assume those are ftp
+transfers, and ignore them. I would like to do the same with DCC
+connections, if anyone knows how - email me.
+
+icmplog
+   This program logs most icmp packets, or atleast the interesting ones (we
+dont, for instance, log echo_replies). The ICMP logging could provide alot
+more information than it does, and I might add more information in the
+future, but for now, it serves well enough.
+
+

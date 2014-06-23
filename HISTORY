@@ -1,0 +1,10 @@
+miplog v. 1.0 :
+
+just a little hack of the original Edulla's packet: trace only tcp 
+and icmp, and write reports in 4 ways.
+
+miplog v. 1.2 :
+
+Added auditing of udp packets.
+Bug fixing in configure script.
+

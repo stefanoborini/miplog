@@ -1,0 +1,33 @@
+Hi all,
+
+Here is a little hack of the original tcp & icmp packet logger made by
+Mike Edulla (medulla@infosoc.com).
+
+It made a fd_set of the raw sockets and then switch using a select call. 
+In this way, a single binary can trace tcp, icmp and udp packets. 
+We can log all events in four ways :
+
+1 - Directly onto the console
+2 - Using a file
+3 - Using syslogd facilities
+4 - Using both syslogd and file
+
+Miplog also need a list of sites to ban in revealing UDP packets, ie
+your DNS (who reply to your resolv queries with UDP packets) or icq 
+servers. You have to include it using the configure script.
+Remember you can ban a subnet, 'cause I use strstr to compare the 
+source address (in dot quad) with the ip array you gave to miplog 
+during config-time. I think it's very ugly, but in a future release 
+i'll work better.
+
+I include in this packet the original iplogger from Mike Edulla.
+
+Be warned: i'm not a computer science student. I'm a chemist, so if you
+find an error somewhere in my rehack of the code, please contact me ASAP!
+I'm a C programmer just for fun... so bugs scare me! :(
+
+Be alerted to the configure script too... it's my VERY first shell script!
+
+			see ya ;)
+
+                    Stefano Borini

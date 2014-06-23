@@ -1,0 +1,343 @@
+#!/bin/sh
+
+myterm=$TERM
+
+export TERM=vt100
+
+if [ ! $0 = "./configure" -o $0 = "configure" ]
+then
+	echo "It's a better idea to cd into the dir and then fire up me!"
+	echo
+	exit 0
+fi
+
+clear
+echo "MIPLog Configure program"
+echo "Made by Munehiro over a re-hack of iplogger by Mike Edulla"
+echo "Please read the readme, readme.after and LICENSE files!"
+echo "There are important notices about the authors and the GPL"
+echo "THIS SOFTWARE COMES WITH NO WARRANTY!"
+echo 
+echo "Ok... starting configuration!"
+echo
+	
+mypath=`pwd`
+console=0
+
+rm -f $mypath/defines.h
+
+sleep 1
+
+echo "Searching for some standard include files i need for compile..."
+
+sleep 1
+echo -n "Search for ip.h..."
+sleep 1
+
+if [ -e /usr/include/netinet/ip.h ]
+then
+	echo "/usr/include/netinet/ip.h"
+	echo "#include <netinet/ip.h>" >>$mypath/defines.h
+elif [ -e /usr/include/linux/ip.h ]
+then
+	echo "/usr/include/linux/ip.h"
+	echo "#include <linux/ip.h>" >>$mypath/defines.h
+else
+	echo "not found!"
+	echo "Sorry... i can't find the file named ip.h "
+	echo "Try to find out in your include dir, and"
+	echo "make a symbolic link in /usr/include/netinet"
+	exit 0
+fi
+
+sleep 1
+echo -n "Search for tcp.h..."
+sleep 1
+
+if [ -e /usr/include/netinet/tcp.h ]
+then
+	echo "/usr/include/netinet/tcp.h"
+	echo "#include <netinet/tcp.h>" >>$mypath/defines.h
+elif [ -e /usr/include/linux/tcp.h ]
+then
+	echo "/usr/include/linux/tcp.h"
+	echo "#include <linux/tcp.h>" >>$mypath/defines.h
+else
+	echo "not found!"
+	echo "Sorry... i can't find the file named tcp.h "
+	echo "Try to find out in your include dir, and"
+	echo "make a symbolic link in /usr/include/netinet"
+	exit 0
+fi
+
+sleep 1
+echo -n "Search for linux/icmp.h or netinet/ip_icmp.h..."
+sleep 1
+
+if [ -e /usr/include/netinet/ip_icmp.h ]
+then
+	echo "/usr/include/netinet/ip_icmp.h"
+	echo "#include <netinet/ip_icmp.h>" >>$mypath/defines.h
+elif [ -e /usr/include/linux/icmp.h ]
+then
+	echo "/usr/include/linux/icmp.h"
+	echo "#include <linux/icmp.h>" >>$mypath/defines.h
+else
+	echo "not found!"
+	echo "Sorry... i can't find the file named icmp.h or ip_icmp.h"
+	echo "Try to find out in your include dir, and"
+	echo "make a symbolic link in /usr/include/netinet/ip_icmp.h"
+	exit 0
+fi
+
+
+sleep 1
+echo -n "Search for udp.h..."
+sleep 1
+
+if [ -e /usr/include/netinet/udp.h ]
+then
+	echo "/usr/include/netinet/udp.h"
+	echo "#include <netinet/udp.h>" >>$mypath/defines.h
+elif [ -e /usr/include/linux/udp.h ]
+then
+	echo "/usr/include/linux/udp.h"
+	echo "#include <linux/udp.h>" >>$mypath/defines.h
+else
+	echo "not found!"
+	echo "Sorry... i can't find the file named udp.h "
+	echo "Try to find out in your include dir, and"
+	echo "make a symbolic link in /usr/include/netinet"
+	exit 0
+fi
+
+
+
+
+sleep 1
+echo
+echo
+echo "my path is $mypath"
+echo
+echo "Select a log method for your MIPLogger"
+echo
+echo "1) Log to console"
+echo "2) Log to file"
+echo "3) Log using syslogd facilities"
+echo "4) Log using both syslogd and file"
+echo
+echo -n "select? "
+read input
+case $input in
+	1 ) 	echo
+		echo "OK... Logging to console"
+		echo "#define LOG_METHOD 0" >>$mypath/defines.h
+		console=1;
+		flag=0	
+		;;
+	2 ) 	echo
+		echo "Ok... Logging to file"
+		echo "#define LOG_METHOD 1" >>$mypath/defines.h
+		flag=1
+		;;
+	3 ) 	echo
+		echo "Ok... Logging using Syslogd"
+		echo "#define LOG_METHOD 2" >>$mypath/defines.h
+		flag=0
+		;;
+	4 ) 	echo
+		echo "Ok... Log both syslogd and file"
+		echo "#define LOG_METHOD 3" >>$mypath/defines.h
+		flag=1
+		;;
+	* ) echo "Unknown options..."
+		exit 0 
+		;;
+esac
+
+sleep 2
+
+if [ $flag -eq 1 ]
+then
+	while :
+	do
+		clear
+		echo "Now i need a path and a name for the file."
+		echo "Place it in a hidden dir, with hidden name."
+		echo "In case of log mangling we have at least some info"
+		echo "of the ugly lamer!"
+		echo
+		echo "example : /usr/local/bin/.test"
+		echo
+		echo -n "absolute path -> "
+		read input
+		if [ -d $input ]
+		then
+			echo
+			echo "$input is a directory... select another please"
+			sleep 2
+			continue
+		fi
+
+		if [ -e $input ]
+		then
+			echo
+			echo -n "$input exists... overwrite (y/n) ? "
+			read yn
+			if [ $yn = "y" ]
+			then
+				break
+			else
+				continue
+			fi
+		fi
+		break
+		done
+		echo
+		echo "Ok... will log to $input"
+		echo "#define FILENAME \"$input\"" >> defines.h
+		sleep 2
+fi
+
+clear
+echo 
+echo "Ok... now i need a list of ip addresses i'll ignore during report about"
+echo "UDP packets... ie our DNS always reply to your DNS queries with UDP packets."
+echo "If you don't exclude this packets, you can generate a loop with your DNS:"
+echo "receive a packet, ask to you DNS what's the name of the remote host, the DNS"
+echo "replies with a UDP, miplog ask to DNS who replies with another UDP and so on.."
+echo
+echo "Also exclude icq packets or syslogd remote messages."
+echo
+echo "give me the address in dot-quad notation (x.x.x.x)."
+echo "give a single dot (.) when finished"
+echo
+
+echo "char *sites_array[]={" >>$mypath/defines.h
+
+count=0
+
+while :
+do
+echo -n "exclude -> "
+read var
+if [ $var = "." ]
+then
+	break
+else
+	if [ $count -ne 0 ] 
+	then 
+		echo "," >>$mypath/defines.h
+	fi
+fi
+echo -n "\"$var\"" >>$mypath/defines.h
+count=`expr $count + 1`
+done
+
+echo "};" >>$mypath/defines.h
+echo "#define MAX_SITES $count" >>$mypath/defines.h
+
+
+clear
+echo
+echo "Good... would you like funny messages or ugly, serious messages?"
+echo
+echo -n "select (f/s) ? "
+read var
+
+if [ $var = "f" ]
+then	echo
+	echo "Funny messages engaged and running ! :)"
+	echo "#define FUNNY_MSG" >> defines.h
+else
+	echo
+	echo "Well.. ok :("
+	echo "#undef FUNNY_MSG" >>defines.h
+fi
+
+
+sleep 2
+
+while :
+do
+path=/usr/local/sbin/miplog
+clear
+echo
+echo "Ok... now give me a path and a name for the binary"
+echo
+echo "Predefined path is $path"
+echo
+echo "I suggest to you a hidden name, so the ugly bastard won't be"
+echo "alerted if, after a successful exploit, read \"miplog\" in the ps" 
+echo "Hit return if it's good"
+echo 
+echo -n "binary path -> "
+read input
+
+if [ ! -z $input ] 
+then
+	path=$input
+fi
+
+if [ -d $path ]
+then
+	echo
+	echo "$path is a directory... select another please"
+	sleep 2
+	continue
+fi
+
+if [ -e $path ]
+then
+	echo
+	echo -n "$path exists... overwrite (y/n) ? "
+	read yn
+	if [ $yn = "y" ]
+	then
+		break
+	else
+		continue
+	fi
+fi
+break
+done
+
+echo "Making binary..."
+cc -o $mypath/miplog.out $mypath/miplog.c
+echo "Installing it in $path owned root.root chmod 700" 
+install -g 0 -m 0700 -o 0 $mypath/miplog.out $path
+rm -f $mypath/miplog.out
+
+if [ ! $console = 1 ]
+then
+
+cat << EOF
+
+
+Ok... now $path is installed.
+Remember to fire up it during boot, adding the line
+
+$path
+
+To your /etc/rc.d/rc.local file.
+EOF
+
+else
+
+cat << EOF
+
+
+Ok... now $path is installed.
+Remember to fire up it during boot, adding the line
+
+$path >/dev/tty12
+
+To your /etc/rc.d/rc.local file.
+
+In this simple way, you have always logged the report on the
+virtual console no.12 of your box
+EOF
+
+fi
+
+export TERM=$myterm
